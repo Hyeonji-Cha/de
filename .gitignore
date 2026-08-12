@@ -210,5 +210,8 @@ __marimo__/
 # 기존 로그 제거 
 # git rm -r --cached logs/
 logs/
-logs/**
-# 
+# logs/**
+
+# 로컬 pc 가상환경
+airflow/
+ 
