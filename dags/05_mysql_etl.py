@@ -25,6 +25,9 @@ import os
 # 실습 기본 구성 틀 작성
 # 2. 전역변수
 KST = pendulum.timezone("Asia/Seoul")
+# extract한 데이터를 임시로 저장하는 위치
+DATA_PATH = "/opt/airflow/dags/data"
+os.makedirs(DATA_PATH, exist_ok=True)
 
 # 콜백함수
 def _extract(**kwargs):
@@ -42,12 +45,71 @@ def _extract(**kwargs):
     }
     for i in range(10)
   ]
-  logging.info( f'더미데이터 {data}'  )
-  pass
+  # 데이터를 다음 task로 전달 or 데이터 저장(리눅스 경로상)후 path 전달
+  # 파일명 sensor_data_20260813.json: 20260813 -> "ds_nodash" 활용
+  file_full_path = f"{DATA_PATH}/sensor_data_{kwargs['ds_nodash']}.json"
+  with open(file_full_path, "w") as f:
+    json.dump(data, f)
+  logging.info( f'Extracted data: {data}'  )
+  logging.info( f'Extracted data saved to: {file_full_path}'  )
+  # XCOM을 통해 전달
+  return file_full_path
 def _transform(**kwargs):
+  # 1. _extract에서 전달한 내용을 XOCM에서 가져오기
+  ti = kwargs['ti']
+  json_file_path = ti.xcom_pull(task_ids='extract')
+  logging.info (f'전달된 데이터 파일 경로: {json_file_path}')
+
+  # 2. transform -> data clean, 전처리(단위변경, 파생변수, ...)
+  #    섭씨 온도를 화씨 온도로 계산-> 파생 변수 추가 -> pandas와 DataFrame 활용
+  #    섭씨 온도 100도 이하 만 센서가 정상, 그 이상은 이상탐지의 대상으로 간주-> 이상치 제거
+  # 2-1. json file -> load -> DataFrame
+  df = pd.read_json(json_file_path)
+  # 2-2. 이상치 제거 (섭씨 온도 100도 이하)
+  target_df = df[df['temperature'] <= 100].copy()
+  # 2-3. 섭씨 온도를 화씨 온도로 변환
+  target_df['temperature_f'] = target_df['temperature'] * 9/5 + 32
+  logging.info(f'가공된 데이터 (rows,cols): {target_df.shape}')
+  # DataFrame을 CSV 파일로 저장
+  csv_file_path = f"{DATA_PATH}/preprocessing_data_{kwargs['ds_nodash']}.csv"
+  target_df.to_csv(csv_file_path, index=False)
+  logging.info(f'Transformed data saved to: {csv_file_path}')
+  
+  return csv_file_path
+
   pass
 def _load(**kwargs):
-  pass
+  # 1. csv 경로 획득
+  ti = kwargs['ti']
+  csv_file_path = ti.xcom_pull(task_ids='transform')
+  logging.info(f'전달된 CSV 파일 경로: {csv_file_path}')
+
+  # 2. csv -> df로드
+  df = pd.read_csv(csv_file_path)
+
+  # 3. mysql  연결 -> 데이터 삽입  
+  hooks = MySqlHook(mysql_conn_id='mysql_default')
+  try:
+    with hooks.get_conn()as conn:
+      logging.info(f'MySQL 연결 성공')
+      with conn.cursor() as cursor:
+        sql = '''
+            insert into sensor_readings
+            (sensor_id, timestamp, temperature_c, temperature_f)
+            VALUES (%s, %s, %s, %s)
+        '''
+        params = [
+          (data["sensor_id"], data["timestamp"], data["temperature"], data["temperature_f"])
+          for _, data in df.iterrows() # 데이터가 없을때 까지 반복, 1세트씩(인덱스, 데이터) 반환
+        ]
+        cursor.executemany( sql, params ) # n개 데이터 한번에 넣기
+        conn.commit()
+  except Exception as e:
+    logging.error(f'SQL 에러 : {e}')
+  else:
+    logging.info(f'데이터베이스 처리 완료')
+  finally:
+    logging.info(f'MySQL 연결 종료')
 
 # DAG 정의
 with DAG( 
