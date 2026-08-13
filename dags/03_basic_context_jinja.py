@@ -1,6 +1,8 @@
 '''
-- airflow 내부 정보 접근, 출력시 jinja 활용, 내부 정보 접근시 macro 활용
-- 콜백함수 내부 kwargs를 인자를 통해 접근, 기타 일반적인 상황 jinja를 이용하여 접근
+- Airflow가 제공하는 실행 정보(context)를 Task에서 사용하는 방법을 연습
+- Python 함수에서는 kwargs를 통해 ds, ti 등의 context 정보에 접근
+- BashOperator 명령어에서는 Jinja 템플릿({{ }})을 사용해 context 값을 출력
+- 날짜 계산처럼 Airflow가 제공하는 기능은 macro를 Jinja 안에서 호출하여 사용
 '''
 # 1. 모듈
 from airflow import DAG
