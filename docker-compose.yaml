@@ -53,6 +53,9 @@ x-airflow-common: #공통 설정 묶음
   # build: .
   environment:
     &airflow-common-env
+    # 대한민국/서울 시간대 조정
+    AIRFLOW_WEBSERVER_DEFAULT_UI_TIMEZONE: 'Asia/Seoul'
+    AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: 'false'
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@postgres/airflow
@@ -68,7 +71,9 @@ x-airflow-common: #공통 설정 묶음
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    # 아파치 에어플로우 MySQL provider 설치 추가 -> airflow생태계에 내에 패키지 추가하는 방법-> aws도 추가
+    # 여기서는 적재용도로 mysql 사용 (s3가 없으므로)
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-} apache-airflow-providers-mysql
     # The following line can be used to set a custom config file, stored in the local config folder
     # If you want to use it, outcomment it and replace airflow.cfg with the name of your config file
     # AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
