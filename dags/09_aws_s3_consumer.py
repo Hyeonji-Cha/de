@@ -17,8 +17,8 @@ import pendulum
 
 # 2. 환경변수
 BUCKET_NAME      = "de-ai-18-infra-s3-bk-827913617635"
-UPLOAD_FILE_NAME = "sensor_data.csv"              # 현재시간등 인식/구분 정보 누락
-S3_KEY           = f'airflow/{UPLOAD_FILE_NAME}'  # s3상 위치 조정
+UPLOAD_FILE_NAME = "sensor_data.csv"              # Producer가 S3에 업로드하는 파일명
+S3_KEY           = f'airflow/{UPLOAD_FILE_NAME}'  # Producer와 동일한 S3 객체 키
 
 # 4-1. 콜백함수
 def _reading_data(**kwargs):

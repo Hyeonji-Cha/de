@@ -15,8 +15,8 @@ import pendulum
 
 # 2. 환경변수(전역변수) -> .env, airflow 환경변수
 BUCKET_NAME      = "de-ai-18-infra-s3-bk-827913617635"
-UPLOAD_FILE_NAME = "dags/data/sensor_data_20260811.json"              # 현재시간등 인식/구분 정보 누락
-S3_KEY           = f'airflow/{UPLOAD_FILE_NAME}'  # s3상 위치 조정
+UPLOAD_FILE_NAME = "sensor_data.csv"              # 로컬에서 생성하고 S3에 업로드할 파일명
+S3_KEY           = f'airflow/{UPLOAD_FILE_NAME}'  # S3에서 사용할 객체 키
 LOCAL_PATH       = f"/opt/airflow/dags/data/{UPLOAD_FILE_NAME}"
 
 # 3. DAG 정의
