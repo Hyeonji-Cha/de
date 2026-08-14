@@ -10,7 +10,7 @@ from typing import List         # 요청/응답 데이터 구성시 구조 정�
 import random                   # 신용 평가시 활용
 
 # 2. FastAPI 객체 생성
-app = FastAPI
+app = FastAPI()
 
 # 3. 요청/응답 구조 정의 -> class
 class ReqData(BaseModel):
