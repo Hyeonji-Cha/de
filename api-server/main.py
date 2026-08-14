@@ -13,11 +13,13 @@ import random                   # 신용 평가시 활용
 app = FastAPI()
 
 # 3. 요청/응답 구조 정의 -> class
+# ReqData: API가 받을 고객 데이터의 구조
 class ReqData(BaseModel):
     # 칼럼 나열
     user_id: str
     income: int     # 소득
     loan_amt: int   # 현재 총 대출액
+# ResData: API가 반환할 데이터 구조
 class ResData(BaseModel):
     # 칼럼 나열
     user_id: str
@@ -25,10 +27,11 @@ class ResData(BaseModel):
     grade: str          # S급, A급, B급, C급...
 
 # 4. 라우팅 : url, 처리함수 매핑 정의
-@app.get("/")
+@app.get("/") # 서버 상태 확인
 def home():
   return {"status":"AI 신용평가 서비스 API"}
 
+# 신용평가 API
 @app.post("/predict", response_model=List[ResData]) # 응답 구조 정의
 def predict( users:List[ReqData]):  # 요청 구조 정의
   # 고객 1명씩 신용평가하여 => 응답구조 작성후 => 응답
