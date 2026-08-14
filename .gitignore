@@ -214,4 +214,29 @@ logs/
 
 # 로컬 pc 가상환경
 airflow/
- 
+
+# Terraform execution outputs
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+
+# Secrets and local configuration
+*.pem
+.env
+# 임시로 유지
+# infra/terraform.tfvars
+
+# Temporary outputs
+rendered-*.yaml
+.runtime/
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
