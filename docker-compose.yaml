@@ -318,8 +318,8 @@ services:
     container_name: airflow-ai-api-server
     ports:
       - "8000:8000"
-    networks:
-      - default # 생략 가능
+    # networks:
+    #   - default # 생략 가능
 volumes:
   postgres-db-volume:
   mysql-data:
