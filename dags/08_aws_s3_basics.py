@@ -13,26 +13,33 @@
 # 1. 모듈 가져오기
 from airflow.providers.amazon.aws.transfers.local_to_s3 import LocalFilesystemToS3Operator
 from airflow.providers.amazon.aws.hooks.s3 import S3Hook
+import logging
+import pendulum
+
+from datetime import timedelta
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+
 # 2. 환경변수(전역변수)
-BUCKET_NAME = de-ai-18-infra-s3-bk-827913617635
-UPLOAD_FILE_NAME = "지역_위치별(주유소) (24).xls"
+BUCKET_NAME = "de-ai-18-infra-s3-bk-827913617635"
+UPLOAD_FILE_NAME = "preprocessing_data_20260812.csv"
 LOCAL_PATH = f"/opt/airflow/dags/data/{UPLOAD_FILE_NAME}" # 컨테이너에서 업로드 경로
 
 # 4-1. 콜백 함수
-def _chcek_s3(**kwargs):
+def _check_s3(**kwargs):
     # S3 Hook 을 이용하여 실제로 업로드 되었는지 체크하기
     # 1. 훅 생성
-    hook = S3Hook(aws_conn_id="aws_defalt")
+    hook = S3Hook(aws_conn_id="aws_default")
     # 2. 훅 이용 키 체크 -> 모든 키 조회(임시 방편)
     keys   = hook.list_keys(bucket_name=BUCKET_NAME)
     # 3. 키 체크
     if not keys:
        raise ValueError("버킷내 키 없음. 업로드 실패")
-    # 4. chcek
-    # for key in keys:
-    if UPLOAD_FILE_NAME in keys:
-       logging.info(f"{UPLOAD_FILE_NAME}파일 S3에 업로드 확인 완료")   
-    pass
+    # 4. 업로드 대상 파일 확인
+    if UPLOAD_FILE_NAME not in keys:
+       raise ValueError(f"{UPLOAD_FILE_NAME} 파일을 S3에서 찾을 수 없음")
+
+    logging.info(f"{UPLOAD_FILE_NAME} 파일 S3 업로드 확인 완료")
 
 # 3. DAG 정의
 with DAG(  
@@ -60,10 +67,10 @@ with DAG(
     replace   = True               # 키가 동일하면 (동일 파일명이면) -> 대체
   )
   # 체크 (조회, get, list)
-task_check_s3 = PythonOperator(
+  task_check_s3 = PythonOperator(
     task_id   = "check_s3",
     python_callable = _check_s3
   )
 
   # 5. 의존성
-task_upload_to_s3 >> task_check_s3
+  task_upload_to_s3 >> task_check_s3
