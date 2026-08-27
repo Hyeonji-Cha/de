@@ -207,13 +207,14 @@ marimo/_lsp/
 __marimo__/
 
 # logs
-# 기존 로그 제거 
+# 기존 로그 제거 (아래 명령 수행)
 # git rm -r --cached logs/
 logs/
 # logs/**
 
-# 로컬 pc 가상환경
+# 로컬(호스트) PC 가상환경
 airflow/
+
 
 # Terraform execution outputs
 **/.terraform/*
@@ -239,4 +240,12 @@ rendered-*.yaml
 
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+
+# Local Terraform variables
+infra/terraform.tfvars
+
+# Generated logs
+output/*.jsonl
+output/*.log
